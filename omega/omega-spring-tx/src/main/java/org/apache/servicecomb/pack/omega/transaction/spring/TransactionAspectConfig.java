@@ -89,4 +89,9 @@ public class TransactionAspectConfig {
       @Qualifier("coordinateContext") CallbackContext coordinateContext) {
     return new ParticipateAnnotationProcessor(omegaContext, coordinateContext);
   }
+
+  @Bean
+  StartSagaExtraProcessor startSagaExtraProcessor(SagaMessageSender sender, OmegaContext context) {
+    return new StartSagaExtraProcessor(sender, context);
+  }
 }
