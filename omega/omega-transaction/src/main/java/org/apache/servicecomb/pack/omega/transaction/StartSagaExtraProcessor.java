@@ -51,10 +51,10 @@ public class StartSagaExtraProcessor {
 		}
 	}
 
-	public void sagaAbort(Throwable throwable)  throws Throwable {
+	public void sagaAbort(String compensationMethod, Throwable throwable)  throws Throwable {
 		try {
 			if (!(throwable instanceof OmegaException)) {
-				sagaStartAnnotationProcessor.onError(null, throwable);
+				sagaStartAnnotationProcessor.onError(compensationMethod, throwable);
 				LOG.error("Transaction {} failed.", context.globalTxId());
 			}
 		} catch (Throwable throwableNew) {

@@ -101,7 +101,7 @@ public class StartSagaExtraProcessorTest {
 	public void clearContextOnSagaStartError() throws Throwable {
 		RuntimeException oops = new RuntimeException("oops");
 		extraProcessor.sagaStart(5);
-		extraProcessor.sagaAbort(oops);
+		extraProcessor.sagaAbort("forTest", oops);
 
 		assertThat(messages.size(), is(2));
 		TxEvent event = messages.get(0);
