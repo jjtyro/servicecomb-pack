@@ -24,6 +24,7 @@ import org.apache.servicecomb.pack.omega.transaction.MessageHandler;
 import org.apache.servicecomb.pack.omega.transaction.SagaMessageSender;
 import org.apache.servicecomb.pack.omega.transaction.SagaStartAspect;
 import org.apache.servicecomb.pack.omega.transaction.TransactionAspect;
+import org.apache.servicecomb.pack.omega.transaction.StartSagaExtraProcessor;
 import org.apache.servicecomb.pack.omega.transaction.tcc.CoordinateMessageHandler;
 import org.apache.servicecomb.pack.omega.transaction.tcc.ParametersContext;
 import org.apache.servicecomb.pack.omega.transaction.tcc.TccMessageHandler;
