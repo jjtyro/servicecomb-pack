@@ -70,8 +70,8 @@ class SpringTxEventRepository implements TxEventRepository {
 
   @Override
   @Segment(name = "findFirstUncompensatedEventByIdGreaterThan", category = "application", library = "kamon")
-  public List<TxEvent> findFirstUncompensatedEventByIdGreaterThan(long id, String type) {
-    return eventRepo.findFirstByTypeAndSurrogateIdGreaterThan(type, id, SINGLE_TX_EVENT_REQUEST);
+  public List<TxEvent> findFirstUncompensatedEventByIdGreaterThan(long id) {
+    return eventRepo.findFirstUncompensatedEventBySurrogateIdGreaterThan(id, SINGLE_TX_EVENT_REQUEST);
   }
 
   @Override

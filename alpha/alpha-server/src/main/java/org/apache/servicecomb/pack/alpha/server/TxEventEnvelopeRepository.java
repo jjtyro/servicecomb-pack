@@ -32,7 +32,7 @@ public interface TxEventEnvelopeRepository extends CrudRepository<TxEvent, Long>
   List<TxEvent> findByGlobalTxId(String globalTxId);
 
   @Query("SELECT t FROM TxEvent t "
-      + "WHERE t.type = 'TxAbortedEvent' AND NOT EXISTS( "
+      + "WHERE (t.type = 'TxAbortedEvent' OR t.type = 'TxCompensationAbortedEvent') AND NOT EXISTS( "
       + "  SELECT t1.globalTxId FROM TxEvent t1"
       + "  WHERE t1.globalTxId = t.globalTxId "
       + "    AND t1.type IN ('TxEndedEvent', 'SagaEndedEvent')) AND NOT EXISTS ( "
@@ -75,7 +75,7 @@ public interface TxEventEnvelopeRepository extends CrudRepository<TxEvent, Long>
       + "    AND t1.type IN ('TxStartedEvent', 'SagaStartedEvent') ) = 0 ")
   List<TxEvent> findByEventGlobalTxIdAndEventType(String globalTxId, String type);
 
-  @Query("SELECT t FROM TxEvent t "
+  /*@Query("SELECT t FROM TxEvent t "
       + "WHERE t.globalTxId = ?1 AND t.type = 'TxStartedEvent' AND EXISTS ( "
       + "  SELECT t1.globalTxId"
       + "  FROM TxEvent t1 "
@@ -88,14 +88,31 @@ public interface TxEventEnvelopeRepository extends CrudRepository<TxEvent, Long>
       + "  WHERE t2.globalTxId = ?1 "
       + "  AND t2.localTxId = t.localTxId "
       + "  AND t2.type = 'TxCompensatedEvent') "
-      + "ORDER BY t.surrogateId ASC")
+      + "ORDER BY t.surrogateId ASC")*/
+  @Query("SELECT t FROM TxEvent t "
+          + " WHERE t.globalTxId = ?1 "
+          + "   AND t.type = 'TxStartedEvent' "
+          + "   AND EXISTS ( "
+          + "            SELECT t1.globalTxId"
+          + "              FROM TxEvent t1 "
+          + "             WHERE t1.globalTxId = ?1 "
+          + "               AND t1.localTxId = t.localTxId "
+          + "               AND (t1.type = 'TxEndedEvent' OR t1.type = 'TxCompensationAbortedEvent')"
+          + "        ) "
+          + "   AND NOT EXISTS ( "
+          + "        SELECT t2.globalTxId"
+          + "        FROM TxEvent t2 "
+          + "        WHERE t2.globalTxId = ?1 "
+          + "        AND t2.localTxId = t.localTxId "
+          + "        AND t2.type = 'TxCompensatedEvent') "
+          + "ORDER BY t.surrogateId ASC")
   List<TxEvent> findStartedEventsWithMatchingEndedButNotCompensatedEvents(String globalTxId);
 
   @Query("SELECT t FROM TxEvent t "
       + "WHERE t.type = ?1 AND t.surrogateId > ?2 AND EXISTS ( "
       + "  SELECT t1.globalTxId FROM TxEvent t1 "
       + "  WHERE t1.globalTxId = t.globalTxId "
-      + "    AND t1.type = 'TxAbortedEvent' AND NOT EXISTS ( "
+      + "    AND (t1.type = 'TxAbortedEvent' or t1.type = 'TxCompensationAbortedEvent') AND NOT EXISTS ( "
       + "    SELECT t2.globalTxId FROM TxEvent t2 "
       + "    WHERE t2.globalTxId = t1.globalTxId "
       + "      AND t2.localTxId = t1.localTxId "
@@ -113,6 +130,52 @@ public interface TxEventEnvelopeRepository extends CrudRepository<TxEvent, Long>
   List<TxEvent> findFirstByTypeAndSurrogateIdGreaterThan(String type, long surrogateId, Pageable pageable);
 
   Optional<TxEvent> findFirstByTypeAndSurrogateIdGreaterThan(String type, long surrogateId);
+
+  @Query("SELECT t FROM TxEvent t "
+          + " WHERE ("
+          + "            ("
+          + "                    t.type = 'TxEndedEvent' "
+          + "                AND t.surrogateId > ?1"
+          + "                AND EXISTS ( "
+          + "                        SELECT t1.globalTxId FROM TxEvent t1 "
+          + "                        WHERE t1.globalTxId = t.globalTxId "
+          + "                        AND (t1.type = 'TxAbortedEvent' OR t1.type ='TxCompensationAbortedEvent')"
+          + "                        AND NOT EXISTS ( "
+          + "                                SELECT t2.globalTxId FROM TxEvent t2 "
+          + "                                    WHERE t2.globalTxId = t1.globalTxId "
+          + "                                    AND t2.localTxId = t1.localTxId "
+          + "                                    AND t2.type = 'TxStartedEvent' "
+          + "                                    AND t2.creationTime > t1.creationTime"
+          + "                            )"
+          + "                    ) "
+          + "            ) "
+          + "            OR "
+          + "            ("
+          + "                    t.type ='TxCompensationAbortedEvent' "
+          + "                AND t.surrogateId > ?1"
+          + "                AND NOT EXISTS ( "
+          + "                        SELECT t2.globalTxId FROM TxEvent t2 "
+          + "                            WHERE t2.globalTxId = t.globalTxId "
+          + "                            AND t2.localTxId = t.localTxId "
+          + "                            AND t2.type = 'TxStartedEvent' "
+          + "                            AND t2.creationTime > t.creationTime"
+          + "                    )"
+          + "            )"
+          + "       )"
+          + "   AND NOT EXISTS ( "
+          + "            SELECT t3.globalTxId FROM TxEvent t3 "
+          + "            WHERE t3.globalTxId = t.globalTxId "
+          + "            AND t3.localTxId = t.localTxId "
+          + "            AND t3.type = 'TxCompensatedEvent'"
+          + "        ) "
+          + "   AND ( "
+          + "            SELECT MIN(t4.retries) FROM TxEvent t4 "
+          + "            WHERE t4.globalTxId = t.globalTxId "
+          + "            AND t4.localTxId = t.localTxId "
+          + "            AND t4.type = 'TxStartedEvent' "
+          + "        ) = 0 "
+          + "ORDER BY t.surrogateId ASC")
+  List<TxEvent> findFirstUncompensatedEventBySurrogateIdGreaterThan(long surrogateId, Pageable pageable);
 
   @Query("SELECT t FROM TxEvent t "
       + "WHERE t.type = ?1 AND EXISTS ( "

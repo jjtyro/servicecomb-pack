@@ -17,15 +17,27 @@
 
 package org.apache.servicecomb.pack.omega.transaction;
 
-public interface EventAwareInterceptor {
+import org.apache.servicecomb.pack.common.EventType;
 
-  AlphaResponse preIntercept(String parentTxId, String compensationMethod, int timeout,
-      String retriesMethod,
-      int retries, Object... message);
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
-  void postIntercept(String parentTxId, String compensationMethod);
+public class TxCompensationAbortedEvent extends TxEvent {
 
-  void onError(String parentTxId, String compensationMethod, Throwable throwable);
+  private static final int PAYLOADS_MAX_LENGTH = 10240;
 
-  void onCompensationError(String parentTxId, String compensationMethod, Throwable throwable);
+  public TxCompensationAbortedEvent(String globalTxId, String localTxId, String parentTxId, String compensationMethod, Throwable throwable) {
+    super(EventType.TxCompensationAbortedEvent, globalTxId, localTxId, parentTxId, compensationMethod, 0, "", 0,
+        stackTrace(throwable));
+  }
+
+  private static String stackTrace(Throwable e) {
+    StringWriter writer = new StringWriter();
+    e.printStackTrace(new PrintWriter(writer));
+    String stackTrace = writer.toString();
+    if (stackTrace.length() > PAYLOADS_MAX_LENGTH) {
+      stackTrace = stackTrace.substring(0, PAYLOADS_MAX_LENGTH);
+    }
+    return stackTrace;
+  }
 }

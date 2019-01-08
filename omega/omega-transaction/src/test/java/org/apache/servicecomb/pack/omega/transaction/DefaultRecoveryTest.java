@@ -27,6 +27,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -108,6 +109,7 @@ public class DefaultRecoveryTest {
     when(methodSignature.getMethod()).thenReturn(this.getClass().getDeclaredMethod("doNothing"));
     when(compensable.compensationMethod()).thenReturn("doNothing");
     when(compensable.retries()).thenReturn(0);
+    when(compensable.compensationExceptions()).thenReturn(new Class[]{SocketTimeoutException.class});
 
     omegaContext.setGlobalTxId(globalTxId);
     omegaContext.setLocalTxId(localTxId);
@@ -161,6 +163,34 @@ public class DefaultRecoveryTest {
     assertThat(abortedEvent.localTxId(), is(localTxId));
     assertThat(abortedEvent.parentTxId(), is(parentTxId));
     assertThat(abortedEvent.type(), is(EventType.TxAbortedEvent));
+  }
+
+  @Test
+  public void recordCompensationAbortedEventWhenFailed() throws Throwable {
+    when(joinPoint.proceed()).thenThrow(new SocketTimeoutException("oops"));
+
+    try {
+      recoveryPolicy.apply(joinPoint, compensable, interceptor, omegaContext, parentTxId, 0);
+      expectFailing(SocketTimeoutException.class);
+    } catch (SocketTimeoutException e) {
+      assertThat(e.getMessage(), is("oops"));
+    }
+
+    assertThat(messages.size(), is(2));
+
+    TxEvent startedEvent = messages.get(0);
+    assertThat(startedEvent.globalTxId(), is(globalTxId));
+    assertThat(startedEvent.localTxId(), is(localTxId));
+    assertThat(startedEvent.parentTxId(), is(parentTxId));
+    assertThat(startedEvent.type(), is(EventType.TxStartedEvent));
+    assertThat(startedEvent.retries(), is(0));
+    assertThat(startedEvent.retryMethod(), is(""));
+
+    TxEvent abortedEvent = messages.get(1);
+    assertThat(abortedEvent.globalTxId(), is(globalTxId));
+    assertThat(abortedEvent.localTxId(), is(localTxId));
+    assertThat(abortedEvent.parentTxId(), is(parentTxId));
+    assertThat(abortedEvent.type(), is(EventType.TxCompensationAbortedEvent));
   }
 
   @Test

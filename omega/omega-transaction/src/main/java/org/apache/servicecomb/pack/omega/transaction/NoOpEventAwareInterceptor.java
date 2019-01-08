@@ -37,4 +37,9 @@ public class NoOpEventAwareInterceptor implements EventAwareInterceptor {
   public void onError(String parentTxId, String compensationMethod, Throwable throwable) {
     // NoOp
   }
+
+  @Override
+  public void onCompensationError(String parentTxId, String compensationMethod, Throwable throwable) {
+    // NoOp
+  }
 }

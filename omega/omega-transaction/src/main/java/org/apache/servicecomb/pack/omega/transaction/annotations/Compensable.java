@@ -72,4 +72,6 @@ public @interface Compensable {
    * @return
    */
   int timeout() default 0;
+
+  Class<? extends Throwable>[] compensationExceptions() default {};
 }

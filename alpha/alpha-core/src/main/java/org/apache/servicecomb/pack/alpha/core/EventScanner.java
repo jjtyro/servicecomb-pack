@@ -106,7 +106,7 @@ public class EventScanner implements Runnable {
 
   @Trace("saveUncompensatedEventsToCommands")
   private void saveUncompensatedEventsToCommands() {
-    eventRepository.findFirstUncompensatedEventByIdGreaterThan(nextEndedEventId, TxEndedEvent.name())
+    eventRepository.findFirstUncompensatedEventByIdGreaterThan(nextEndedEventId)
         .forEach(event -> {
           LOG.info("Found uncompensated event {}", event);
           nextEndedEventId = event.id();

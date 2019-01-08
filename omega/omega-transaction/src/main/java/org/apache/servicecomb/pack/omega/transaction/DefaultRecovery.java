@@ -71,7 +71,18 @@ public class DefaultRecovery implements RecoveryPolicy {
 
       return result;
     } catch (Throwable throwable) {
-      interceptor.onError(parentTxId, compensationSignature, throwable);
+      boolean isCompenstionExcetion = false;
+      for (Class<? extends Throwable> item: compensable.compensationExceptions()) {
+        if (item.isInstance(throwable)) {
+          isCompenstionExcetion = true;
+          break;
+        }
+      }
+      if (!isCompenstionExcetion) {
+        interceptor.onError(parentTxId, compensationSignature, throwable);
+      } else {
+        interceptor.onCompensationError(parentTxId, compensationSignature, throwable);
+      }
       throw throwable;
     }
   }
