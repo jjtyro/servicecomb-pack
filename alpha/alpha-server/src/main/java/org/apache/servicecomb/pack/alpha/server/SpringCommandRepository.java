@@ -100,4 +100,16 @@ public class SpringCommandRepository implements CommandRepository {
 
     return commands;
   }
+
+  @Transactional
+  @Override
+  @Segment(name = "remakCommandAsNewFromPending", category = "application", library = "kamon")
+  public void remakCommandAsNewFromPending(String globalTxId, String localTxId) {
+      commandRepository.updateStatusByGlobalTxIdAndLocalTxId(
+              PENDING.name(),
+              NEW.name(),
+              globalTxId,
+              localTxId
+      );
+  }
 }

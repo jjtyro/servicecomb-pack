@@ -78,7 +78,7 @@ public class CompensationMessageHandlerTest {
   }
 
   @Test
-  public void sendsCompensatedEventOnCompensationCompleted() {
+  public void sendsCompensatedEventOnCompensationCompleted()  throws Throwable {
     handler.onReceive(globalTxId, localTxId, parentTxId, compensationMethod, payload);
 
     assertThat(events.size(), is(1));

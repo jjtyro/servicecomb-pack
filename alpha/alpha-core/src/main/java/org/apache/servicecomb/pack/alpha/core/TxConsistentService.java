@@ -17,10 +17,6 @@
 
 package org.apache.servicecomb.pack.alpha.core;
 
-import static org.apache.servicecomb.pack.common.EventType.SagaEndedEvent;
-import static org.apache.servicecomb.pack.common.EventType.TxAbortedEvent;
-import static org.apache.servicecomb.pack.common.EventType.TxStartedEvent;
-
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.List;
@@ -31,16 +27,20 @@ import org.slf4j.LoggerFactory;
 import kamon.annotation.EnableKamon;
 import kamon.annotation.Segment;
 
+import static org.apache.servicecomb.pack.common.EventType.*;
+
 @EnableKamon
 public class TxConsistentService {
   private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   private final TxEventRepository eventRepository;
+  private final CommandRepository commandRepository;
 
   private final List<String> types = Arrays.asList(TxStartedEvent.name(), SagaEndedEvent.name());
 
-  public TxConsistentService(TxEventRepository eventRepository) {
+  public TxConsistentService(TxEventRepository eventRepository, CommandRepository commandRepository) {
     this.eventRepository = eventRepository;
+    this.commandRepository = commandRepository;
   }
   @Segment(name = "handleTxEvent", category = "application", library = "kamon")
   public boolean handle(TxEvent event) {
@@ -50,7 +50,13 @@ public class TxConsistentService {
       return false;
     }
 
-    eventRepository.save(event);
+    if (event.type().equals(TxCompensateFailedEvent.name())) {
+      LOG.info("Compensation globalTxId {} localTxId {} Failed! Because: {}", event.globalTxId(), event.localTxId(), event.payloads());
+      commandRepository.remakCommandAsNewFromPending(event.globalTxId(), event.localTxId());
+    } else {
+      eventRepository.save(event);
+    }
+
 
     return true;
   }

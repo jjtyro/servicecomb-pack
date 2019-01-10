@@ -174,8 +174,8 @@ public interface TxEventEnvelopeRepository extends CrudRepository<TxEvent, Long>
           + "            AND t4.localTxId = t.localTxId "
           + "            AND t4.type = 'TxStartedEvent' "
           + "        ) = 0 "
-          + "ORDER BY t.surrogateId ASC")
-  List<TxEvent> findFirstUncompensatedEventBySurrogateIdGreaterThan(long surrogateId, Pageable pageable);
+          + "ORDER BY t.surrogateId Desc")
+  List<TxEvent> findLastUncompensatedEventBySurrogateIdGreaterThan(long surrogateId, Pageable pageable);
 
   @Query("SELECT t FROM TxEvent t "
       + "WHERE t.type = ?1 AND EXISTS ( "

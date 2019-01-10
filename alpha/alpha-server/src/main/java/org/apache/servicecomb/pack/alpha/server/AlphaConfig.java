@@ -103,7 +103,7 @@ public class AlphaConfig {
               omegaCallback, eventPollingInterval).run();
           LOG.info("Starting the EventScanner.");
           }
-        TxConsistentService consistentService = new TxConsistentService(eventRepository);
+        TxConsistentService consistentService = new TxConsistentService(eventRepository, commandRepository);
         return consistentService;
   }
 

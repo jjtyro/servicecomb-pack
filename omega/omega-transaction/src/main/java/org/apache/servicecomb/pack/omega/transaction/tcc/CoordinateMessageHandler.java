@@ -20,9 +20,13 @@ package org.apache.servicecomb.pack.omega.transaction.tcc;
 import org.apache.servicecomb.pack.common.TransactionStatus;
 import org.apache.servicecomb.pack.omega.context.CallbackContext;
 import org.apache.servicecomb.pack.omega.context.OmegaContext;
+import org.apache.servicecomb.pack.omega.transaction.TxCompensateFailedEvent;
 import org.apache.servicecomb.pack.omega.transaction.tcc.events.CoordinatedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CoordinateMessageHandler implements TccMessageHandler {
+  private static final Logger LOG = LoggerFactory.getLogger(CoordinateMessageHandler.class);
 
   private final TccMessageSender tccMessageSender;
 
@@ -45,9 +49,14 @@ public class CoordinateMessageHandler implements TccMessageHandler {
   public void onReceive(String globalTxId, String localTxId, String parentTxId, String methodName) {
     // TODO need to catch the exception and send the failed message
     // The parameter need to be updated here
-    callbackContext.apply(globalTxId, localTxId, methodName, parametersContext.getParameters(localTxId));
-    tccMessageSender.coordinate(new CoordinatedEvent(globalTxId, localTxId, parentTxId, methodName, TransactionStatus.Succeed));
-    // Need to remove the parameter
-    parametersContext.removeParameter(localTxId);
+    try {
+      callbackContext.apply(globalTxId, localTxId, methodName, parametersContext.getParameters(localTxId));
+      tccMessageSender.coordinate(new CoordinatedEvent(globalTxId, localTxId, parentTxId, methodName, TransactionStatus.Succeed));
+      // Need to remove the parameter
+      parametersContext.removeParameter(localTxId);
+    } catch (Throwable e) {
+      LOG.error("Process reveived compensation command failed! ", e);
+      tccMessageSender.coordinate(new CoordinatedEvent(globalTxId, localTxId, parentTxId, methodName, TransactionStatus.Failed));
+    }
   }
 }

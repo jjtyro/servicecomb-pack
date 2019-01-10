@@ -18,8 +18,12 @@
 package org.apache.servicecomb.pack.omega.transaction;
 
 import org.apache.servicecomb.pack.omega.context.CallbackContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CompensationMessageHandler implements MessageHandler {
+  private static final Logger LOG = LoggerFactory.getLogger(CompensationMessageHandler.class);
+
   private final SagaMessageSender sender;
 
   private final CallbackContext context;
@@ -32,7 +36,12 @@ public class CompensationMessageHandler implements MessageHandler {
   @Override
   public void onReceive(String globalTxId, String localTxId, String parentTxId, String compensationMethod,
       Object... payloads) {
-    context.apply(globalTxId, localTxId, compensationMethod, payloads);
-    sender.send(new TxCompensatedEvent(globalTxId, localTxId, parentTxId, compensationMethod));
+    try {
+      context.apply(globalTxId, localTxId, compensationMethod, payloads);
+      sender.send(new TxCompensatedEvent(globalTxId, localTxId, parentTxId, compensationMethod));
+    } catch (Throwable e) {
+      LOG.error("Process reveived compensation command failed! ", e);
+      sender.send(new TxCompensateFailedEvent(globalTxId, localTxId, parentTxId, compensationMethod, e));
+    }
   }
 }

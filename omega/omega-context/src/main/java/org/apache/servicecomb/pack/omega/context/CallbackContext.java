@@ -40,7 +40,7 @@ public class CallbackContext {
     contexts.put(key, new CallbackContextInternal(target, compensationMethod));
   }
 
-  public void apply(String globalTxId, String localTxId, String callbackMethod, Object... payloads) {
+  public void apply(String globalTxId, String localTxId, String callbackMethod, Object... payloads) throws Throwable {
     CallbackContextInternal contextInternal = contexts.get(callbackMethod);
     String oldGlobalTxId = omegaContext.globalTxId();
     String oldLocalTxId = omegaContext.localTxId();
@@ -54,6 +54,7 @@ public class CallbackContext {
           "Pre-checking for callback method " + contextInternal.callbackMethod.toString()
               + " was somehow skipped, did you forget to configure callback method checking on service startup?",
           e);
+      throw e;
     } finally {
       omegaContext.setGlobalTxId(oldGlobalTxId);
       omegaContext.setLocalTxId(oldLocalTxId);
