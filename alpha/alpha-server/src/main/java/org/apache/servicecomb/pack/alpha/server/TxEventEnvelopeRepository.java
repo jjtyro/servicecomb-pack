@@ -75,20 +75,6 @@ public interface TxEventEnvelopeRepository extends CrudRepository<TxEvent, Long>
       + "    AND t1.type IN ('TxStartedEvent', 'SagaStartedEvent') ) = 0 ")
   List<TxEvent> findByEventGlobalTxIdAndEventType(String globalTxId, String type);
 
-  /*@Query("SELECT t FROM TxEvent t "
-      + "WHERE t.globalTxId = ?1 AND t.type = 'TxStartedEvent' AND EXISTS ( "
-      + "  SELECT t1.globalTxId"
-      + "  FROM TxEvent t1 "
-      + "  WHERE t1.globalTxId = ?1 "
-      + "  AND t1.localTxId = t.localTxId "
-      + "  AND t1.type = 'TxEndedEvent'"
-      + ") AND NOT EXISTS ( "
-      + "  SELECT t2.globalTxId"
-      + "  FROM TxEvent t2 "
-      + "  WHERE t2.globalTxId = ?1 "
-      + "  AND t2.localTxId = t.localTxId "
-      + "  AND t2.type = 'TxCompensatedEvent') "
-      + "ORDER BY t.surrogateId ASC")*/
   @Query("SELECT t FROM TxEvent t "
           + " WHERE t.globalTxId = ?1 "
           + "   AND t.type = 'TxStartedEvent' "
@@ -174,8 +160,8 @@ public interface TxEventEnvelopeRepository extends CrudRepository<TxEvent, Long>
           + "            AND t4.localTxId = t.localTxId "
           + "            AND t4.type = 'TxStartedEvent' "
           + "        ) = 0 "
-          + "ORDER BY t.surrogateId Desc")
-  List<TxEvent> findLastUncompensatedEventBySurrogateIdGreaterThan(long surrogateId, Pageable pageable);
+          + "ORDER BY t.surrogateId ASC")
+  List<TxEvent> findFirstUncompensatedEventByIdGreaterThan(long surrogateId, Pageable pageable);
 
   @Query("SELECT t FROM TxEvent t "
       + "WHERE t.type = ?1 AND EXISTS ( "

@@ -73,7 +73,7 @@ public class TxConsistentServiceTest {
     }
 
     @Override
-    public List<TxEvent> findLastUncompensatedEventByIdGreaterThan(long id) {
+    public List<TxEvent> findFirstUncompensatedEventByIdGreaterThan(long id) {
       return emptyList();
     }
 

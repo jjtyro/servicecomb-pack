@@ -97,8 +97,7 @@ public interface TxEventRepository {
    * @param id
    * @return
    */
-  //List<TxEvent> findFirstUncompensatedEventByIdGreaterThan(long id, String type);
-  List<TxEvent> findLastUncompensatedEventByIdGreaterThan(long id);
+  List<TxEvent> findFirstUncompensatedEventByIdGreaterThan(long id);
 
   /**
    * Find a {@link TxEvent} which satisfies below requirements:

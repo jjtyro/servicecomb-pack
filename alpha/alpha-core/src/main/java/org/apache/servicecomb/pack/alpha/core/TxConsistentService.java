@@ -51,7 +51,7 @@ public class TxConsistentService {
     }
 
     if (event.type().equals(TxCompensateFailedEvent.name())) {
-      LOG.info("Compensation globalTxId {} localTxId {} Failed! Because: {}", event.globalTxId(), event.localTxId(), event.payloads());
+      LOG.info("Compensation globalTxId {} localTxId {} Failed! Because: {}", event.globalTxId(), event.localTxId(), new String(event.payloads()));
       commandRepository.remakCommandAsNewFromPending(event.globalTxId(), event.localTxId());
     } else {
       eventRepository.save(event);

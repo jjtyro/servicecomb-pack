@@ -20,7 +20,6 @@ package org.apache.servicecomb.pack.alpha.core;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.servicecomb.pack.common.EventType.SagaEndedEvent;
 import static org.apache.servicecomb.pack.common.EventType.TxAbortedEvent;
-import static org.apache.servicecomb.pack.common.EventType.TxEndedEvent;
 import static org.apache.servicecomb.pack.common.EventType.TxStartedEvent;
 
 import java.lang.invoke.MethodHandles;
@@ -106,7 +105,7 @@ public class EventScanner implements Runnable {
 
   @Trace("saveUncompensatedEventsToCommands")
   private void saveUncompensatedEventsToCommands() {
-    eventRepository.findLastUncompensatedEventByIdGreaterThan(nextEndedEventId)
+    eventRepository.findFirstUncompensatedEventByIdGreaterThan(nextEndedEventId)
         .forEach(event -> {
           LOG.info("Found uncompensated event {}", event);
           nextEndedEventId = event.id();

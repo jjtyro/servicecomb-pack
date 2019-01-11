@@ -64,7 +64,11 @@ public class SpringCommandRepository implements CommandRepository {
     for (Command command : commands.values()) {
       LOG.info("Saving compensation command {}", command);
       try {
-        commandRepository.save(command);
+        if (commandRepository.findCountOfCommandByEventId(command.eventId()) == 0) {
+          commandRepository.save(command);
+        } else {
+          LOG.warn("Already Exists command {}", command);
+        }
       } catch (Exception e) {
         LOG.warn("Failed to save some command {}", command);
       }

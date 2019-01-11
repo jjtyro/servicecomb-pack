@@ -68,4 +68,8 @@ public interface CommandEntityRepository extends CrudRepository<Command, Long> {
       + " HAVING MAX( CASE c2.status WHEN 'PENDING' THEN 1 ELSE 0 END ) = 0) "
       + "ORDER BY c.eventId ASC LIMIT 1", nativeQuery = true)
   List<Command> findFirstGroupByGlobalTxIdWithoutPendingOrderByIdDesc();
+
+  @Query("SELECT COUNT(c) FROM Command c "
+      + " WHERE c.eventId = :eventId ")
+  int findCountOfCommandByEventId(@Param("eventId") long eventId);
 }

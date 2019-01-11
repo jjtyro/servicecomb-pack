@@ -121,6 +121,10 @@ public class Command {
     return compensationMethod;
   }
 
+  public long eventId() {
+    return eventId;
+  }
+
   byte[] payloads() {
     return payloads;
   }
@@ -132,6 +136,7 @@ public class Command {
   long id() {
     return surrogateId;
   }
+
 
   @Override
   public String toString() {
